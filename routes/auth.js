@@ -72,7 +72,7 @@ router.post('/register', registerValidation, register);
  *       401:
  *         description: Invalid credentials
  */
-router.post('/login', loginValidation, login);
+router.post('/login', loginValidation, login); 
 
 /**
  * @swagger

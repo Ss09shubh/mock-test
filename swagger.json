@@ -9,6 +9,10 @@
     {
       "url": "http://localhost:5000",
       "description": "Development server"
+    },
+    {
+      "url": "https://mock-test-ekuw.onrender.com",
+      "description": "Production server"
     }
   ],
   "components": {
@@ -33,7 +37,11 @@
           },
           "gender": {
             "type": "string",
-            "enum": ["male", "female", "other"],
+            "enum": [
+              "male",
+              "female",
+              "other"
+            ],
             "example": "male"
           },
           "phone": {
@@ -42,7 +50,10 @@
           },
           "role": {
             "type": "string",
-            "enum": ["admin", "member"],
+            "enum": [
+              "admin",
+              "member"
+            ],
             "example": "admin"
           }
         }
@@ -132,7 +143,11 @@
           },
           "status": {
             "type": "string",
-            "enum": ["in-progress", "completed", "auto-submitted"],
+            "enum": [
+              "in-progress",
+              "completed",
+              "auto-submitted"
+            ],
             "example": "completed"
           }
         }
@@ -143,14 +158,22 @@
     "/api/auth/register": {
       "post": {
         "summary": "Register a new user",
-        "tags": ["Auth"],
+        "tags": [
+          "Auth"
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["name", "email", "gender", "phone", "password"],
+                "required": [
+                  "name",
+                  "email",
+                  "gender",
+                  "phone",
+                  "password"
+                ],
                 "properties": {
                   "name": {
                     "type": "string",
@@ -162,7 +185,11 @@
                   },
                   "gender": {
                     "type": "string",
-                    "enum": ["male", "female", "other"],
+                    "enum": [
+                      "male",
+                      "female",
+                      "other"
+                    ],
                     "example": "male"
                   },
                   "phone": {
@@ -175,7 +202,10 @@
                   },
                   "role": {
                     "type": "string",
-                    "enum": ["admin", "member"],
+                    "enum": [
+                      "admin",
+                      "member"
+                    ],
                     "example": "admin"
                   }
                 }
@@ -196,14 +226,19 @@
     "/api/auth/login": {
       "post": {
         "summary": "Login user",
-        "tags": ["Auth"],
+        "tags": [
+          "Auth"
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["email", "password"],
+                "required": [
+                  "email",
+                  "password"
+                ],
                 "properties": {
                   "email": {
                     "type": "string",
@@ -231,7 +266,9 @@
     "/api/auth/me": {
       "get": {
         "summary": "Get current user",
-        "tags": ["Auth"],
+        "tags": [
+          "Auth"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -250,7 +287,9 @@
     "/api/users": {
       "post": {
         "summary": "Create a new member (Admin only)",
-        "tags": ["Users"],
+        "tags": [
+          "Users"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -262,7 +301,13 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["name", "email", "gender", "phone", "password"],
+                "required": [
+                  "name",
+                  "email",
+                  "gender",
+                  "phone",
+                  "password"
+                ],
                 "properties": {
                   "name": {
                     "type": "string",
@@ -274,7 +319,11 @@
                   },
                   "gender": {
                     "type": "string",
-                    "enum": ["male", "female", "other"],
+                    "enum": [
+                      "male",
+                      "female",
+                      "other"
+                    ],
                     "example": "female"
                   },
                   "phone": {
@@ -309,7 +358,9 @@
     "/api/users/members": {
       "get": {
         "summary": "Get all members (Admin only)",
-        "tags": ["Users"],
+        "tags": [
+          "Users"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -331,7 +382,9 @@
     "/api/users/members/{id}": {
       "get": {
         "summary": "Get single member (Admin only)",
-        "tags": ["Users"],
+        "tags": [
+          "Users"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -368,7 +421,9 @@
     "/api/courses": {
       "post": {
         "summary": "Create a new course (Admin only)",
-        "tags": ["Courses"],
+        "tags": [
+          "Courses"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -380,7 +435,10 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["name", "description"],
+                "required": [
+                  "name",
+                  "description"
+                ],
                 "properties": {
                   "name": {
                     "type": "string",
@@ -412,7 +470,9 @@
       },
       "get": {
         "summary": "Get all courses (Admin sees all, Member sees assigned)",
-        "tags": ["Courses"],
+        "tags": [
+          "Courses"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -431,7 +491,9 @@
     "/api/courses/{id}": {
       "get": {
         "summary": "Get single course",
-        "tags": ["Courses"],
+        "tags": [
+          "Courses"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -468,7 +530,9 @@
     "/api/courses/{id}/assign": {
       "post": {
         "summary": "Assign course to member (Admin only)",
-        "tags": ["Courses"],
+        "tags": [
+          "Courses"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -492,7 +556,9 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["memberId"],
+                "required": [
+                  "memberId"
+                ],
                 "properties": {
                   "memberId": {
                     "type": "string",
@@ -525,7 +591,10 @@
     "/api/courses/{courseId}/examinations": {
       "get": {
         "summary": "Get all examinations for a course",
-        "tags": ["Courses", "Examinations"],
+        "tags": [
+          "Courses",
+          "Examinations"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -562,7 +631,9 @@
     "/api/examinations": {
       "post": {
         "summary": "Create a new examination (Admin only)",
-        "tags": ["Examinations"],
+        "tags": [
+          "Examinations"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -574,7 +645,14 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["name", "courseId", "totalMarks", "passMarks", "durationMinutes", "questions"],
+                "required": [
+                  "name",
+                  "courseId",
+                  "totalMarks",
+                  "passMarks",
+                  "durationMinutes",
+                  "questions"
+                ],
                 "properties": {
                   "name": {
                     "type": "string",
@@ -655,7 +733,9 @@
     "/api/examinations/{id}": {
       "get": {
         "summary": "Get single examination",
-        "tags": ["Examinations"],
+        "tags": [
+          "Examinations"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -692,7 +772,9 @@
     "/api/examinations/{id}/start": {
       "post": {
         "summary": "Start an examination (Member only)",
-        "tags": ["Examinations"],
+        "tags": [
+          "Examinations"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -732,7 +814,9 @@
     "/api/examinations/{id}/submit": {
       "post": {
         "summary": "Submit examination answers (Member only)",
-        "tags": ["Examinations"],
+        "tags": [
+          "Examinations"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -756,7 +840,10 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["examResultId", "answers"],
+                "required": [
+                  "examResultId",
+                  "answers"
+                ],
                 "properties": {
                   "examResultId": {
                     "type": "string",
@@ -805,7 +892,9 @@
     "/api/results": {
       "get": {
         "summary": "Get all exam results (Admin sees all, Member sees own)",
-        "tags": ["Results"],
+        "tags": [
+          "Results"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -824,7 +913,9 @@
     "/api/results/{id}": {
       "get": {
         "summary": "Get single exam result",
-        "tags": ["Results"],
+        "tags": [
+          "Results"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -861,7 +952,9 @@
     "/api/results/member/{memberId}": {
       "get": {
         "summary": "Get results for a specific member (Admin only)",
-        "tags": ["Results"],
+        "tags": [
+          "Results"
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -895,7 +988,9 @@
     "/api/results/course/{courseId}": {
       "get": {
         "summary": "Get results for a specific course (Admin only)",
-        "tags": ["Results"],
+        "tags": [
+          "Results"
+        ],
         "security": [
           {
             "bearerAuth": []
