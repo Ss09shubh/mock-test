@@ -29,11 +29,11 @@
         "properties": {
           "name": {
             "type": "string",
-            "example": "John Doe"
+            "example": "Shubham Singha"
           },
           "email": {
             "type": "string",
-            "example": "john.doe@example.com"
+            "example": "shubh@example.com"
           },
           "gender": {
             "type": "string",
@@ -177,11 +177,11 @@
                 "properties": {
                   "name": {
                     "type": "string",
-                    "example": "John Doe"
+                    "example": "Shubham SIngha"
                   },
                   "email": {
                     "type": "string",
-                    "example": "john.doe@example.com"
+                    "example": "shubh@example.com"
                   },
                   "gender": {
                     "type": "string",
@@ -242,7 +242,7 @@
                 "properties": {
                   "email": {
                     "type": "string",
-                    "example": "john.doe@example.com"
+                    "example": "shubh@example.com"
                   },
                   "password": {
                     "type": "string",
