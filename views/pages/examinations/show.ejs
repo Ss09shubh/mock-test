@@ -1,0 +1,89 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1><%= examination.name %></h1>
+  <div>
+    <a href="/courses/<%= examination.course._id %>" class="btn btn-secondary">
+      <i class="fas fa-arrow-left"></i> Back to Course
+    </a>
+    <% if (user.role === 'member') { %>
+      <a href="/examinations/<%= examination._id %>/start" class="btn btn-primary ms-2">
+        <i class="fas fa-play"></i> Start Examination
+      </a>
+    <% } %>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header bg-primary text-white">
+    <h5 class="mb-0">Examination Details</h5>
+  </div>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-6">
+        <p><strong>Course:</strong> <%= examination.course.name %></p>
+        <p><strong>Total Marks:</strong> <%= examination.totalMarks %></p>
+        <p><strong>Pass Marks:</strong> <%= examination.passMarks %></p>
+      </div>
+      <div class="col-md-6">
+        <p><strong>Duration:</strong> <%= examination.durationMinutes %> minutes</p>
+        <p><strong>Questions:</strong> <%= examination.questions.length %></p>
+        <% if (user.role === 'admin') { %>
+          <p><strong>Created By:</strong> <%= examination.createdBy ? examination.createdBy.name : 'Unknown' %></p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<% if (user.role === 'admin') { %>
+  <div class="card">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">Questions</h5>
+    </div>
+    <div class="card-body">
+      <% examination.questions.forEach((question, qIndex) => { %>
+        <div class="card mb-3">
+          <div class="card-header bg-light">
+            <h6 class="mb-0">Question <%= qIndex + 1 %> (Marks: <%= question.marks %>)</h6>
+          </div>
+          <div class="card-body">
+            <p><%= question.text %></p>
+            <div class="ms-4">
+              <% question.options.forEach((option, oIndex) => { %>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" disabled <%= option.isCorrect ? 'checked' : '' %>>
+                  <label class="form-check-label <%= option.isCorrect ? 'text-success fw-bold' : '' %>">
+                    <%= option.text %>
+                    <% if (option.isCorrect) { %>
+                      <i class="fas fa-check text-success"></i>
+                    <% } %>
+                  </label>
+                </div>
+              <% }); %>
+            </div>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+  </div>
+<% } else { %>
+  <div class="card">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">Examination Instructions</h5>
+    </div>
+    <div class="card-body">
+      <ul>
+        <li>This examination contains <%= examination.questions.length %> questions.</li>
+        <li>Total marks for this examination is <%= examination.totalMarks %>.</li>
+        <li>You need to score at least <%= examination.passMarks %> marks to pass.</li>
+        <li>You have <%= examination.durationMinutes %> minutes to complete the examination.</li>
+        <li>Once started, the timer cannot be paused.</li>
+        <li>If the time expires, your examination will be automatically submitted.</li>
+      </ul>
+      <div class="d-grid">
+        <a href="/examinations/<%= examination._id %>/start" class="btn btn-primary btn-lg">
+          <i class="fas fa-play"></i> Start Examination
+        </a>
+      </div>
+    </div>
+  </div>
+<% } %>

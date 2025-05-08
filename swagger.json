@@ -1,0 +1,930 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Examination System API",
+    "description": "API documentation for the Examination System",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000",
+      "description": "Development server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "email": {
+            "type": "string",
+            "example": "john.doe@example.com"
+          },
+          "gender": {
+            "type": "string",
+            "enum": ["male", "female", "other"],
+            "example": "male"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+1234567890"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["admin", "member"],
+            "example": "admin"
+          }
+        }
+      },
+      "Course": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Web Development"
+          },
+          "description": {
+            "type": "string",
+            "example": "Learn modern web development techniques with HTML, CSS, and JavaScript"
+          }
+        }
+      },
+      "Examination": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "JavaScript Fundamentals"
+          },
+          "totalMarks": {
+            "type": "number",
+            "example": 100
+          },
+          "passMarks": {
+            "type": "number",
+            "example": 60
+          },
+          "durationMinutes": {
+            "type": "number",
+            "example": 90
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Question"
+            }
+          }
+        }
+      },
+      "Question": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "example": "What is the correct way to declare a JavaScript variable?"
+          },
+          "marks": {
+            "type": "number",
+            "example": 5
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Option"
+            }
+          }
+        }
+      },
+      "Option": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "example": "var x = 5;"
+          },
+          "isCorrect": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "ExamResult": {
+        "type": "object",
+        "properties": {
+          "totalMarksObtained": {
+            "type": "number",
+            "example": 75
+          },
+          "isPassed": {
+            "type": "boolean",
+            "example": true
+          },
+          "status": {
+            "type": "string",
+            "enum": ["in-progress", "completed", "auto-submitted"],
+            "example": "completed"
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "summary": "Register a new user",
+        "tags": ["Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "email", "gender", "phone", "password"],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "John Doe"
+                  },
+                  "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                  },
+                  "gender": {
+                    "type": "string",
+                    "enum": ["male", "female", "other"],
+                    "example": "male"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "example": "+1234567890"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "password123"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": ["admin", "member"],
+                    "example": "admin"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered successfully"
+          },
+          "400": {
+            "description": "Invalid input or user already exists"
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "Login user",
+        "tags": ["Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "password123"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User logged in successfully"
+          },
+          "401": {
+            "description": "Invalid credentials"
+          }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "summary": "Get current user",
+        "tags": ["Auth"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current user data"
+          },
+          "401": {
+            "description": "Not authorized"
+          }
+        }
+      }
+    },
+    "/api/users": {
+      "post": {
+        "summary": "Create a new member (Admin only)",
+        "tags": ["Users"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "email", "gender", "phone", "password"],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "Jane Smith"
+                  },
+                  "email": {
+                    "type": "string",
+                    "example": "jane.smith@example.com"
+                  },
+                  "gender": {
+                    "type": "string",
+                    "enum": ["male", "female", "other"],
+                    "example": "female"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "example": "+9876543210"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "securepass456"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Member created successfully"
+          },
+          "400": {
+            "description": "Invalid input or member already exists"
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "403": {
+            "description": "Not allowed to access this route"
+          }
+        }
+      }
+    },
+    "/api/users/members": {
+      "get": {
+        "summary": "Get all members (Admin only)",
+        "tags": ["Users"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of all members"
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "403": {
+            "description": "Not allowed to access this route"
+          }
+        }
+      }
+    },
+    "/api/users/members/{id}": {
+      "get": {
+        "summary": "Get single member (Admin only)",
+        "tags": ["Users"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "example": "60d0fe4f5311236168a109ca"
+            },
+            "required": true,
+            "description": "Member ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Member data"
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "403": {
+            "description": "Not allowed to access this route"
+          },
+          "404": {
+            "description": "Member not found"
+          }
+        }
+      }
+    },
+    "/api/courses": {
+      "post": {
+        "summary": "Create a new course (Admin only)",
+        "tags": ["Courses"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "description"],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "Web Development"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Learn modern web development techniques with HTML, CSS, and JavaScript"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Course created successfully"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "403": {
+            "description": "Not allowed to access this route"
+          }
+        }
+      },
+      "get": {
+        "summary": "Get all courses (Admin sees all, Member sees assigned)",
+        "tags": ["Courses"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of courses"
+          },
+          "401": {
+            "description": "Not authorized"
+          }
+        }
+      }
+    },
+    "/api/courses/{id}": {
+      "get": {
+        "summary": "Get single course",
+        "tags": ["Courses"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "example": "60d0fe4f5311236168a109cb"
+            },
+            "required": true,
+            "description": "Course ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Course data"
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "403": {
+            "description": "Not allowed to access this course"
+          },
+          "404": {
+            "description": "Course not found"
+          }
+        }
+      }
+    },
+    "/api/courses/{id}/assign": {
+      "post": {
+        "summary": "Assign course to member (Admin only)",
+        "tags": ["Courses"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "example": "60d0fe4f5311236168a109cb"
+            },
+            "required": true,
+            "description": "Course ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["memberId"],
+                "properties": {
+                  "memberId": {
+                    "type": "string",
+                    "example": "60d0fe4f5311236168a109ca"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Course assigned successfully"
+          },
+          "400": {
+            "description": "Invalid input or course already assigned"
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "403": {
+            "description": "Not allowed to access this route"
+          },
+          "404": {
+            "description": "Course or member not found"
+          }
+        }
+      }
+    },
+    "/api/courses/{courseId}/examinations": {
+      "get": {
+        "summary": "Get all examinations for a course",
+        "tags": ["Courses", "Examinations"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "courseId",
+            "schema": {
+              "type": "string",
+              "example": "60d0fe4f5311236168a109cb"
+            },
+            "required": true,
+            "description": "Course ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of examinations"
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "403": {
+            "description": "Not allowed to access this course"
+          },
+          "404": {
+            "description": "Course not found"
+          }
+        }
+      }
+    },
+    "/api/examinations": {
+      "post": {
+        "summary": "Create a new examination (Admin only)",
+        "tags": ["Examinations"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "courseId", "totalMarks", "passMarks", "durationMinutes", "questions"],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "JavaScript Fundamentals"
+                  },
+                  "courseId": {
+                    "type": "string",
+                    "example": "60d0fe4f5311236168a109cb"
+                  },
+                  "totalMarks": {
+                    "type": "number",
+                    "example": 100
+                  },
+                  "passMarks": {
+                    "type": "number",
+                    "example": 60
+                  },
+                  "durationMinutes": {
+                    "type": "number",
+                    "example": 90
+                  },
+                  "questions": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "text": {
+                          "type": "string",
+                          "example": "What is the correct way to declare a JavaScript variable?"
+                        },
+                        "marks": {
+                          "type": "number",
+                          "example": 5
+                        },
+                        "options": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "text": {
+                                "type": "string",
+                                "example": "var x = 5;"
+                              },
+                              "isCorrect": {
+                                "type": "boolean",
+                                "example": true
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Examination created successfully"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "403": {
+            "description": "Not allowed to access this route"
+          },
+          "404": {
+            "description": "Course not found"
+          }
+        }
+      }
+    },
+    "/api/examinations/{id}": {
+      "get": {
+        "summary": "Get single examination",
+        "tags": ["Examinations"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "example": "60d0fe4f5311236168a109cc"
+            },
+            "required": true,
+            "description": "Examination ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Examination data"
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "403": {
+            "description": "Not allowed to access this examination"
+          },
+          "404": {
+            "description": "Examination not found"
+          }
+        }
+      }
+    },
+    "/api/examinations/{id}/start": {
+      "post": {
+        "summary": "Start an examination (Member only)",
+        "tags": ["Examinations"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "example": "60d0fe4f5311236168a109cc"
+            },
+            "required": true,
+            "description": "Examination ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Examination started successfully"
+          },
+          "400": {
+            "description": "Examination already in progress"
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "403": {
+            "description": "Not allowed to take this examination"
+          },
+          "404": {
+            "description": "Examination not found"
+          }
+        }
+      }
+    },
+    "/api/examinations/{id}/submit": {
+      "post": {
+        "summary": "Submit examination answers (Member only)",
+        "tags": ["Examinations"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "example": "60d0fe4f5311236168a109cc"
+            },
+            "required": true,
+            "description": "Examination ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["examResultId", "answers"],
+                "properties": {
+                  "examResultId": {
+                    "type": "string",
+                    "example": "60d0fe4f5311236168a109cd"
+                  },
+                  "answers": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "questionId": {
+                          "type": "string",
+                          "example": "60d0fe4f5311236168a109ce"
+                        },
+                        "optionId": {
+                          "type": "string",
+                          "example": "60d0fe4f5311236168a109cf"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Examination submitted successfully"
+          },
+          "400": {
+            "description": "Invalid input or examination not in progress"
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "403": {
+            "description": "Not allowed to submit this examination"
+          },
+          "404": {
+            "description": "Examination or exam result not found"
+          }
+        }
+      }
+    },
+    "/api/results": {
+      "get": {
+        "summary": "Get all exam results (Admin sees all, Member sees own)",
+        "tags": ["Results"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of exam results"
+          },
+          "401": {
+            "description": "Not authorized"
+          }
+        }
+      }
+    },
+    "/api/results/{id}": {
+      "get": {
+        "summary": "Get single exam result",
+        "tags": ["Results"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "example": "60d0fe4f5311236168a109cd"
+            },
+            "required": true,
+            "description": "Result ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exam result data"
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "403": {
+            "description": "Not allowed to access this result"
+          },
+          "404": {
+            "description": "Result not found"
+          }
+        }
+      }
+    },
+    "/api/results/member/{memberId}": {
+      "get": {
+        "summary": "Get results for a specific member (Admin only)",
+        "tags": ["Results"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "memberId",
+            "schema": {
+              "type": "string",
+              "example": "60d0fe4f5311236168a109ca"
+            },
+            "required": true,
+            "description": "Member ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of member's exam results"
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "403": {
+            "description": "Not allowed to access this route"
+          }
+        }
+      }
+    },
+    "/api/results/course/{courseId}": {
+      "get": {
+        "summary": "Get results for a specific course (Admin only)",
+        "tags": ["Results"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "courseId",
+            "schema": {
+              "type": "string",
+              "example": "60d0fe4f5311236168a109cb"
+            },
+            "required": true,
+            "description": "Course ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of course exam results"
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "403": {
+            "description": "Not allowed to access this route"
+          }
+        }
+      }
+    }
+  }
+}

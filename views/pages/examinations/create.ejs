@@ -1,0 +1,167 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1>Create Examination for <%= course.name %></h1>
+  <a href="/courses/<%= course._id %>" class="btn btn-secondary">
+    <i class="fas fa-arrow-left"></i> Back to Course
+  </a>
+</div>
+
+<div class="card">
+  <div class="card-header bg-primary text-white">
+    <h5 class="mb-0">Examination Details</h5>
+  </div>
+  <div class="card-body">
+    <form action="/examinations" method="POST" id="examination-form">
+      <input type="hidden" name="courseId" value="<%= course._id %>">
+      
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label for="name" class="form-label">Examination Name</label>
+          <input type="text" id="name" name="name" class="form-control" required>
+        </div>
+        <div class="col-md-2">
+          <label for="totalMarks" class="form-label">Total Marks</label>
+          <input type="number" id="totalMarks" name="totalMarks" class="form-control" min="1" required>
+        </div>
+        <div class="col-md-2">
+          <label for="passMarks" class="form-label">Pass Marks</label>
+          <input type="number" id="passMarks" name="passMarks" class="form-control" min="1" required>
+        </div>
+        <div class="col-md-2">
+          <label for="durationMinutes" class="form-label">Duration (mins)</label>
+          <input type="number" id="durationMinutes" name="durationMinutes" class="form-control" min="1" required>
+        </div>
+      </div>
+      
+      <hr>
+      <h5>Questions</h5>
+      
+      <div id="questions-container">
+        <div class="question-card card mb-3">
+          <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h6 class="mb-0">Question 1</h6>
+            <button type="button" class="btn btn-danger btn-sm remove-question" disabled>
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+          <div class="card-body">
+            <div class="mb-3">
+              <label class="form-label">Question Text</label>
+              <textarea name="questionTexts" class="form-control" rows="2" required></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Marks</label>
+              <input type="number" name="questionMarks" class="form-control question-marks" min="1" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Options (comma separated)</label>
+              <textarea name="options" class="form-control" rows="2" placeholder="Option 1, Option 2, Option 3, Option 4" required></textarea>
+              <small class="form-text text-muted">Enter options separated by commas</small>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Correct Option (0-based index)</label>
+              <input type="number" name="correctOptions" class="form-control" min="0" placeholder="0 for first option, 1 for second, etc." required>
+              <small class="form-text text-muted">Enter the index of the correct option (0 for first, 1 for second, etc.)</small>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mb-3">
+        <button type="button" id="add-question" class="btn btn-info">
+          <i class="fas fa-plus"></i> Add Another Question
+        </button>
+      </div>
+      
+      <div class="d-flex justify-content-between">
+        <button type="submit" class="btn btn-primary">Create Examination</button>
+        <a href="/courses/<%= course._id %>" class="btn btn-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const questionsContainer = document.getElementById('questions-container');
+    const addQuestionBtn = document.getElementById('add-question');
+    const totalMarksInput = document.getElementById('totalMarks');
+    const passMarksInput = document.getElementById('passMarks');
+    const form = document.getElementById('examination-form');
+    
+    let questionCount = 1;
+    
+    // Add question
+    addQuestionBtn.addEventListener('click', function() {
+      questionCount++;
+      
+      const questionCard = document.createElement('div');
+      questionCard.className = 'question-card card mb-3';
+      questionCard.innerHTML = `
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+          <h6 class="mb-0">Question ${questionCount}</h6>
+          <button type="button" class="btn btn-danger btn-sm remove-question">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label class="form-label">Question Text</label>
+            <textarea name="questionTexts" class="form-control" rows="2" required></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Marks</label>
+            <input type="number" name="questionMarks" class="form-control question-marks" min="1" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Options (comma separated)</label>
+            <textarea name="options" class="form-control" rows="2" placeholder="Option 1, Option 2, Option 3, Option 4" required></textarea>
+            <small class="form-text text-muted">Enter options separated by commas</small>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Correct Option (0-based index)</label>
+            <input type="number" name="correctOptions" class="form-control" min="0" placeholder="0 for first option, 1 for second, etc." required>
+            <small class="form-text text-muted">Enter the index of the correct option (0 for first, 1 for second, etc.)</small>
+          </div>
+        </div>
+      `;
+      
+      questionsContainer.appendChild(questionCard);
+      
+      // Add event listener to remove button
+      const removeBtn = questionCard.querySelector('.remove-question');
+      removeBtn.addEventListener('click', function() {
+        questionCard.remove();
+        questionCount--;
+        updateQuestionNumbers();
+      });
+    });
+    
+    // Update question numbers
+    function updateQuestionNumbers() {
+      const questionCards = document.querySelectorAll('.question-card');
+      questionCards.forEach((card, index) => {
+        card.querySelector('h6').textContent = `Question ${index + 1}`;
+      });
+    }
+    
+    // Calculate total marks before submission
+    form.addEventListener('submit', function(e) {
+      const markInputs = document.querySelectorAll('.question-marks');
+      let totalCalculatedMarks = 0;
+      
+      markInputs.forEach(input => {
+        totalCalculatedMarks += parseInt(input.value) || 0;
+      });
+      
+      if (parseInt(totalMarksInput.value) !== totalCalculatedMarks) {
+        e.preventDefault();
+        alert(`The sum of question marks (${totalCalculatedMarks}) does not match the total marks (${totalMarksInput.value}). Please adjust the marks.`);
+      }
+      
+      if (parseInt(passMarksInput.value) > parseInt(totalMarksInput.value)) {
+        e.preventDefault();
+        alert('Pass marks cannot be greater than total marks.');
+      }
+    });
+  });
+</script>

@@ -1,0 +1,156 @@
+<h1 class="mb-4">Dashboard</h1>
+
+<div class="row">
+  <div class="col-md-12">
+    <div class="card mb-4">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Welcome, <%= user.name %></h5>
+      </div>
+      <div class="card-body">
+        <p>Role: <span class="badge bg-info"><%= user.role %></span></p>
+        <p>Email: <%= user.email %></p>
+        <% if (user.role === 'admin') { %>
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> As an admin, you can create courses, manage members, and view all examination results.
+          </div>
+        <% } else { %>
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> As a member, you can take examinations for your assigned courses and view your results.
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<% if (user.role === 'admin') { %>
+  <div class="row">
+    <div class="col-md-4">
+      <div class="card mb-4">
+        <div class="card-body text-center">
+          <i class="fas fa-users fa-3x mb-3 text-primary"></i>
+          <h5 class="card-title">Members</h5>
+          <p class="card-text">Manage members of the system.</p>
+          <a href="/users/members" class="btn btn-primary">View Members</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card mb-4">
+        <div class="card-body text-center">
+          <i class="fas fa-book fa-3x mb-3 text-primary"></i>
+          <h5 class="card-title">Courses</h5>
+          <p class="card-text">Create and manage courses.</p>
+          <a href="/courses" class="btn btn-primary">View Courses</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card mb-4">
+        <div class="card-body text-center">
+          <i class="fas fa-chart-bar fa-3x mb-3 text-primary"></i>
+          <h5 class="card-title">Results</h5>
+          <p class="card-text">View examination results.</p>
+          <a href="/results" class="btn btn-primary">View Results</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <% if (typeof dashboardData !== 'undefined' && dashboardData.recentCourses && dashboardData.recentCourses.length > 0) { %>
+    <div class="card mb-4">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Recent Courses</h5>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Created By</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% dashboardData.recentCourses.forEach(course => { %>
+                <tr>
+                  <td><%= course.name %></td>
+                  <td><%= course.createdBy ? course.createdBy.name : 'Unknown' %></td>
+                  <td>
+                    <a href="/courses/<%= course._id %>" class="btn btn-sm btn-primary">
+                      <i class="fas fa-eye"></i> View
+                    </a>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  <% } else if (user.role === 'admin') { %>
+    <div class="alert alert-info">
+      <i class="fas fa-info-circle"></i> You haven't created any courses yet. <a href="/courses/create" class="alert-link">Create your first course</a>.
+    </div>
+  <% } %>
+<% } else { %>
+  <div class="row">
+    <div class="col-md-6">
+      <div class="card mb-4">
+        <div class="card-body text-center">
+          <i class="fas fa-book fa-3x mb-3 text-primary"></i>
+          <h5 class="card-title">My Courses</h5>
+          <p class="card-text">View your assigned courses and take examinations.</p>
+          <a href="/courses" class="btn btn-primary">View Courses</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card mb-4">
+        <div class="card-body text-center">
+          <i class="fas fa-chart-bar fa-3x mb-3 text-primary"></i>
+          <h5 class="card-title">My Results</h5>
+          <p class="card-text">View your examination results.</p>
+          <a href="/results" class="btn btn-primary">View Results</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <% if (typeof dashboardData !== 'undefined' && dashboardData.assignedCourses && dashboardData.assignedCourses.length > 0) { %>
+    <div class="card mb-4">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">My Assigned Courses</h5>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Course Name</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% dashboardData.assignedCourses.forEach(assignment => { %>
+                <tr>
+                  <td><%= assignment.course.name %></td>
+                  <td>
+                    <a href="/courses/<%= assignment.course._id %>" class="btn btn-sm btn-primary">
+                      <i class="fas fa-eye"></i> View
+                    </a>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  <% } else if (user.role === 'member') { %>
+    <div class="alert alert-info">
+      <i class="fas fa-info-circle"></i> You don't have any assigned courses yet. Please contact an administrator.
+    </div>
+  <% } %>
+<% } %>

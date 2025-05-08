@@ -1,0 +1,38 @@
+<h1 class="mb-4">Courses</h1>
+
+<% if (user.role === 'admin') { %>
+  <div class="mb-4">
+    <a href="/courses/create" class="btn btn-primary">
+      <i class="fas fa-plus"></i> Create New Course
+    </a>
+  </div>
+<% } %>
+
+<% if (courses.length > 0) { %>
+  <div class="row">
+    <% courses.forEach(course => { %>
+      <div class="col-md-4 mb-4">
+        <div class="card h-100">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><%= course.name %></h5>
+          </div>
+          <div class="card-body">
+            <p class="card-text"><%= course.description %></p>
+            <p class="text-muted">Created by: <%= course.createdBy ? course.createdBy.name : 'Unknown' %></p>
+          </div>
+          <div class="card-footer">
+            <a href="/courses/<%= course._id %>" class="btn btn-primary">View Details</a>
+          </div>
+        </div>
+      </div>
+    <% }); %>
+  </div>
+<% } else { %>
+  <div class="alert alert-info">
+    <% if (user.role === 'admin') { %>
+      No courses found. Create a new course to get started.
+    <% } else { %>
+      No courses assigned to you yet.
+    <% } %>
+  </div>
+<% } %>

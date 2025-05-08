@@ -1,0 +1,69 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1>Taking: <%= examination.name %></h1>
+  <div class="exam-timer card bg-danger text-white p-2">
+    <h5 class="mb-0" id="exam-timer">Loading...</h5>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header bg-primary text-white">
+    <h5 class="mb-0">Examination Information</h5>
+  </div>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-4">
+        <p><strong>Course:</strong> <%= examination.course.name %></p>
+      </div>
+      <div class="col-md-4">
+        <p><strong>Total Marks:</strong> <%= examination.totalMarks %></p>
+      </div>
+      <div class="col-md-4">
+        <p><strong>Pass Marks:</strong> <%= examination.passMarks %></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<form action="/examinations/<%= examination._id %>/submit" method="POST" id="exam-form">
+  <input type="hidden" name="examResultId" value="<%= examResult._id %>">
+  
+  <% examination.questions.forEach((question, qIndex) => { %>
+    <div class="card mb-4">
+      <div class="card-header bg-light">
+        <h5 class="mb-0">Question <%= qIndex + 1 %> (Marks: <%= question.marks %>)</h5>
+      </div>
+      <div class="card-body">
+        <p class="mb-3"><%= question.text %></p>
+        <div class="ms-3">
+          <% question.options.forEach((option, oIndex) => { %>
+            <div class="form-check mb-2">
+              <input 
+                class="form-check-input option-input" 
+                type="radio" 
+                name="answers[<%= question._id %>]" 
+                id="q<%= qIndex %>-o<%= oIndex %>" 
+                value="<%= option._id %>"
+              >
+              <label class="form-check-label option-label" for="q<%= qIndex %>-o<%= oIndex %>">
+                <%= option.text %>
+              </label>
+            </div>
+          <% }); %>
+        </div>
+      </div>
+    </div>
+  <% }); %>
+  
+  <div class="d-grid gap-2 col-md-6 mx-auto mb-5">
+    <button type="submit" class="btn btn-primary btn-lg">
+      <i class="fas fa-paper-plane"></i> Submit Examination
+    </button>
+  </div>
+</form>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Start the timer
+    startExamTimer(<%= examination.durationMinutes %>);
+  });
+</script>

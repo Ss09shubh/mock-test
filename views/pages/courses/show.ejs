@@ -1,0 +1,106 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1><%= course.name %></h1>
+  <a href="/courses" class="btn btn-secondary">
+    <i class="fas fa-arrow-left"></i> Back to Courses
+  </a>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header bg-primary text-white">
+    <h5 class="mb-0">Course Details</h5>
+  </div>
+  <div class="card-body">
+    <p><strong>Description:</strong> <%= course.description %></p>
+    <p><strong>Created by:</strong> <%= course.createdBy ? course.createdBy.name : 'Unknown' %></p>
+  </div>
+</div>
+
+<% if (user.role === 'admin') { %>
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Examinations</h5>
+          <a href="/examinations/create/<%= course._id %>" class="btn btn-light btn-sm">
+            <i class="fas fa-plus"></i> Add Examination
+          </a>
+        </div>
+        <div class="card-body">
+          <% if (examinations && examinations.length > 0) { %>
+            <div class="list-group">
+              <% examinations.forEach(exam => { %>
+                <a href="/examinations/<%= exam._id %>" class="list-group-item list-group-item-action">
+                  <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1"><%= exam.name %></h5>
+                    <small><%= exam.durationMinutes %> minutes</small>
+                  </div>
+                  <p class="mb-1">Total Marks: <%= exam.totalMarks %> | Pass Marks: <%= exam.passMarks %></p>
+                  <small>Questions: <%= exam.questions ? exam.questions.length : 0 %></small>
+                </a>
+              <% }); %>
+            </div>
+          <% } else { %>
+            <p class="text-muted">No examinations created for this course yet.</p>
+            <a href="/examinations/create/<%= course._id %>" class="btn btn-primary">
+              <i class="fas fa-plus"></i> Create Examination
+            </a>
+          <% } %>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Assigned Members</h5>
+          <a href="/courses/<%= course._id %>/assign" class="btn btn-light btn-sm">
+            <i class="fas fa-user-plus"></i> Assign Members
+          </a>
+        </div>
+        <div class="card-body">
+          <% if (assignedMembers && assignedMembers.length > 0) { %>
+            <div class="list-group">
+              <% assignedMembers.forEach(assignment => { %>
+                <div class="list-group-item">
+                  <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1"><%= assignment.member.name %></h5>
+                  </div>
+                  <p class="mb-1"><%= assignment.member.email %></p>
+                  <small>Assigned on: <%= new Date(assignment.assignedAt).toLocaleDateString() %></small>
+                </div>
+              <% }); %>
+            </div>
+          <% } else { %>
+            <p class="text-muted">No members assigned to this course yet.</p>
+            <a href="/courses/<%= course._id %>/assign" class="btn btn-primary">
+              <i class="fas fa-user-plus"></i> Assign Members
+            </a>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+<% } else { %>
+  <div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">Examinations</h5>
+    </div>
+    <div class="card-body">
+      <% if (examinations && examinations.length > 0) { %>
+        <div class="list-group">
+          <% examinations.forEach(exam => { %>
+            <a href="/examinations/<%= exam._id %>" class="list-group-item list-group-item-action">
+              <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1"><%= exam.name %></h5>
+                <small><%= exam.durationMinutes %> minutes</small>
+              </div>
+              <p class="mb-1">Total Marks: <%= exam.totalMarks %> | Pass Marks: <%= exam.passMarks %></p>
+              <small>Questions: <%= exam.questions ? exam.questions.length : 0 %></small>
+            </a>
+          <% }); %>
+        </div>
+      <% } else { %>
+        <p class="text-muted">No examinations available for this course yet.</p>
+      <% } %>
+    </div>
+  </div>
+<% } %>
