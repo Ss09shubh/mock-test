@@ -45,8 +45,14 @@ app.use((req, res, next) => {
   next();
 });
 
-// Enable CORS
-app.use(cors());
+// Enable CORS with specific origin
+const corsOptions = {
+  origin: "*",
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
 
 // Set static folder
 app.use(express.static(path.join(__dirname, 'public')));
