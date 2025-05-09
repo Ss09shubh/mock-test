@@ -88,5 +88,6 @@ module.exports = {
   createCourseValidation: exports.validate(course.createCourseValidation),
   assignCourseValidation: exports.validate(course.assignCourseValidation),
   createExaminationValidation: exports.validate(examination.createExaminationValidation),
-  submitExaminationValidation: exports.validate(examination.submitExaminationValidation)
+  submitExaminationValidation: exports.validate(examination.submitExaminationValidation),
+  startExaminationValidation: exports.validate(examination.startExaminationValidation)
 };

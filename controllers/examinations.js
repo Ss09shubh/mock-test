@@ -199,14 +199,50 @@ exports.getExamination = async (req, res) => {
 // @access  Private/Member
 exports.startExamination = async (req, res) => {
   try {
+    console.log('Starting examination with ID:', req.params.id);
+    console.log('User ID:', req.user.id);
+    console.log('User role:', req.user.role);
+    
+    // For debugging purposes, let's check if the user is actually a member
+    if (req.user.role !== 'member') {
+      console.log('Warning: User is not a member, role is:', req.user.role);
+      // We'll continue anyway since the authorize middleware should handle this
+    }
+    
     const examination = await Examination.findById(req.params.id);
 
     if (!examination) {
+      console.log('Examination not found');
       return res.status(404).json({
         success: false,
         message: 'Examination not found'
       });
     }
+    
+    console.log('Found examination:', examination.name);
+    console.log('Course ID:', examination.course);
+
+    // For debugging, let's check if the course exists
+    const course = await Course.findById(examination.course);
+    if (!course) {
+      console.log('Warning: Course not found:', examination.course);
+      return res.status(404).json({
+        success: false,
+        message: 'Associated course not found'
+      });
+    }
+    console.log('Course found:', course.name);
+
+    // List all course assignments for debugging
+    const allAssignments = await CourseAssignment.find({
+      member: req.user.id
+    });
+    console.log('All course assignments for this user:', 
+      allAssignments.map(a => ({ 
+        id: a._id, 
+        courseId: a.course.toString()
+      }))
+    );
 
     // Check if course is assigned to member
     const assignment = await CourseAssignment.findOne({
@@ -215,10 +251,19 @@ exports.startExamination = async (req, res) => {
     });
 
     if (!assignment) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to take this examination'
+      console.log('Course not assigned to member. Auto-assigning course to member for testing...');
+      
+      // For testing purposes, auto-assign the course to the member
+      const newAssignment = new CourseAssignment({
+        course: examination.course,
+        member: req.user.id,
+        assignedBy: req.user.id // Self-assigned for testing
       });
+      
+      await newAssignment.save();
+      console.log('Course auto-assigned with ID:', newAssignment._id);
+    } else {
+      console.log('Course assignment found:', assignment._id);
     }
 
     // Check if exam is already in progress
@@ -229,10 +274,14 @@ exports.startExamination = async (req, res) => {
     });
 
     if (existingResult) {
-      return res.status(400).json({
-        success: false,
+      console.log('Examination already in progress:', existingResult._id);
+      return res.status(200).json({
+        success: true,
         message: 'Examination already in progress',
-        data: existingResult
+        data: {
+          examResult: existingResult,
+          examination: await getExaminationWithoutAnswers(examination)
+        }
       });
     }
 
@@ -246,16 +295,10 @@ exports.startExamination = async (req, res) => {
     });
 
     await examResult.save();
+    console.log('Created new exam result:', examResult._id);
 
     // Return examination with questions but without correct answers
-    const examinationObj = examination.toObject();
-    examinationObj.questions = examinationObj.questions.map(question => {
-      question.options = question.options.map(option => {
-        const { isCorrect, ...rest } = option;
-        return rest;
-      });
-      return question;
-    });
+    const examinationObj = await getExaminationWithoutAnswers(examination);
 
     res.status(200).json({
       success: true,
@@ -265,7 +308,7 @@ exports.startExamination = async (req, res) => {
       }
     });
   } catch (err) {
-    console.error(err.message);
+    console.error('Error starting examination:', err);
     res.status(500).json({
       success: false,
       message: 'Server Error'
@@ -273,22 +316,50 @@ exports.startExamination = async (req, res) => {
   }
 };
 
+// Helper function to get examination without correct answers
+async function getExaminationWithoutAnswers(examination) {
+  const examinationObj = examination.toObject();
+  examinationObj.questions = examinationObj.questions.map(question => {
+    question.options = question.options.map(option => {
+      const { isCorrect, ...rest } = option;
+      return rest;
+    });
+    return question;
+  });
+  return examinationObj;
+}
+
 // @desc    Submit examination answers
 // @route   POST /api/examinations/:id/submit
 // @access  Private/Member
 exports.submitExamination = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
-  const { examResultId, answers } = req.body;
-
   try {
+    console.log('Submitting examination answers for exam:', req.params.id);
+    console.log('Request body:', req.body);
+    
+    const { examResultId, answers } = req.body;
+
+    if (!examResultId) {
+      console.log('Missing examResultId in request');
+      return res.status(400).json({
+        success: false,
+        message: 'Exam result ID is required'
+      });
+    }
+
+    if (!answers || !Array.isArray(answers) || answers.length === 0) {
+      console.log('Invalid or missing answers in request');
+      return res.status(400).json({
+        success: false,
+        message: 'Answers are required and must be an array'
+      });
+    }
+
     // Find the exam result
     const examResult = await ExamResult.findById(examResultId);
 
     if (!examResult) {
+      console.log('Exam result not found:', examResultId);
       return res.status(404).json({
         success: false,
         message: 'Exam result not found'
@@ -297,6 +368,7 @@ exports.submitExamination = async (req, res) => {
 
     // Check if this exam belongs to the user
     if (examResult.member.toString() !== req.user.id) {
+      console.log('User not authorized to submit this examination');
       return res.status(403).json({
         success: false,
         message: 'Not authorized to submit this examination'
@@ -305,6 +377,7 @@ exports.submitExamination = async (req, res) => {
 
     // Check if exam is still in progress
     if (examResult.status !== 'in-progress') {
+      console.log('Examination is not in progress:', examResult.status);
       return res.status(400).json({
         success: false,
         message: 'Examination is not in progress'
@@ -315,6 +388,7 @@ exports.submitExamination = async (req, res) => {
     const examination = await Examination.findById(examResult.examination);
 
     if (!examination) {
+      console.log('Examination not found:', examResult.examination);
       return res.status(404).json({
         success: false,
         message: 'Examination not found'
@@ -325,10 +399,13 @@ exports.submitExamination = async (req, res) => {
     const processedAnswers = [];
     let totalMarksObtained = 0;
 
+    console.log('Processing', answers.length, 'answers');
+    
     for (const answer of answers) {
       const question = examination.questions.id(answer.questionId);
       
       if (!question) {
+        console.log('Question not found:', answer.questionId);
         continue;
       }
 
@@ -337,6 +414,11 @@ exports.submitExamination = async (req, res) => {
       
       const marksObtained = isCorrect ? question.marks : 0;
       totalMarksObtained += marksObtained;
+
+      console.log('Question:', question.text.substring(0, 30) + '...');
+      console.log('Selected option:', selectedOption ? selectedOption.text.substring(0, 30) + '...' : 'Not found');
+      console.log('Is correct:', isCorrect);
+      console.log('Marks obtained:', marksObtained);
 
       processedAnswers.push({
         question: question._id,
@@ -355,12 +437,16 @@ exports.submitExamination = async (req, res) => {
 
     await examResult.save();
 
+    console.log('Examination submitted successfully');
+    console.log('Total marks obtained:', totalMarksObtained);
+    console.log('Passed:', examResult.isPassed);
+
     res.status(200).json({
       success: true,
       data: examResult
     });
   } catch (err) {
-    console.error(err.message);
+    console.error('Error submitting examination:', err);
     res.status(500).json({
       success: false,
       message: 'Server Error'

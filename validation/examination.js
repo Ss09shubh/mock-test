@@ -83,18 +83,14 @@ exports.createExaminationValidation = Joi.object({
 }).custom((value, helpers) => {
   // Validate that pass marks is not greater than total marks
   if (value.passMarks > value.totalMarks) {
-    return helpers.error('custom.passMarks', {
-      message: 'Pass marks cannot be greater than total marks'
-    });
+    return helpers.message('Pass marks cannot be greater than total marks');
   }
   
   // Validate that sum of question marks equals total marks
   if (value.questions) {
     const sumOfMarks = value.questions.reduce((sum, q) => sum + q.marks, 0);
     if (sumOfMarks !== value.totalMarks) {
-      return helpers.error('custom.questionMarks', {
-        message: 'Sum of question marks does not match total marks'
-      });
+      return helpers.message('Sum of question marks must equal total marks');
     }
   }
   
@@ -107,11 +103,24 @@ exports.submitExaminationValidation = Joi.object({
     'any.required': 'Exam result ID is required',
     'any.invalid': 'Invalid Exam result ID format'
   }),
-  answers: Joi.object().pattern(
-    objectId,
-    objectId
+  answers: Joi.array().items(
+    Joi.object({
+      questionId: objectId.required().messages({
+        'any.required': 'Question ID is required',
+        'any.invalid': 'Invalid Question ID format'
+      }),
+      optionId: objectId.required().messages({
+        'any.required': 'Option ID is required',
+        'any.invalid': 'Invalid Option ID format'
+      })
+    })
   ).required().messages({
-    'object.base': 'Answers must be an object',
+    'array.base': 'Answers must be an array',
     'any.required': 'Answers are required'
   })
 });
+
+// Create a simple validation schema for starting an examination
+exports.startExaminationValidation = Joi.object({
+  // No required fields for starting an examination
+}).unknown(true);
