@@ -792,12 +792,10 @@
             "description": "Examination ID"
           }
         ],
+        "description": "Starts an examination for a member. The examination duration is fixed at 10 minutes regardless of the value in the database. For testing purposes, if the member is not assigned to the course, the system will automatically assign it.",
         "responses": {
           "200": {
-            "description": "Examination started successfully"
-          },
-          "400": {
-            "description": "Examination already in progress"
+            "description": "Examination started successfully or already in progress"
           },
           "401": {
             "description": "Not authorized"
@@ -841,31 +839,25 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "examResultId",
-                  "answers"
+                  "examResultId"
                 ],
                 "properties": {
                   "examResultId": {
                     "type": "string",
                     "example": "60d0fe4f5311236168a109cd"
                   },
-                  "answers": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "questionId": {
-                          "type": "string",
-                          "example": "60d0fe4f5311236168a109ce"
-                        },
-                        "optionId": {
-                          "type": "string",
-                          "example": "60d0fe4f5311236168a109cf"
-                        }
-                      }
-                    }
+                  "answers[questionId1]": {
+                    "type": "string",
+                    "example": "optionId1",
+                    "description": "The selected option ID for question with ID 'questionId1'"
+                  },
+                  "answers[questionId2]": {
+                    "type": "string",
+                    "example": "optionId2",
+                    "description": "The selected option ID for question with ID 'questionId2'"
                   }
-                }
+                },
+                "description": "The request body should contain the examResultId and answers in the format 'answers[questionId]': 'optionId'. All questions do not need to be answered."
               }
             }
           }

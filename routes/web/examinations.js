@@ -266,21 +266,15 @@ router.get('/:id/start', ensureAuthenticated, ensureMember, async (req, res) => 
 // Submit examination
 router.post('/:id/submit', ensureAuthenticated, ensureMember, async (req, res) => {
   try {
-    const { examResultId, answers } = req.body;
+    const { examResultId } = req.body;
     
     console.log('Submitting examination:', req.params.id);
     console.log('Exam Result ID:', examResultId);
-    console.log('Answers received:', answers);
+    console.log('req.body:', req.body);
     
     // Validate required fields
     if (!examResultId) {
       req.flash('error_msg', 'Exam result ID is required');
-      return res.redirect(`/examinations/${req.params.id}/start`);
-    }
-    
-    // Check if answers are provided
-    if (!answers) {
-      req.flash('error_msg', 'Please answer all questions before submitting');
       return res.redirect(`/examinations/${req.params.id}/start`);
     }
     
@@ -317,31 +311,39 @@ router.post('/:id/submit', ensureAuthenticated, ensureMember, async (req, res) =
     let totalMarksObtained = 0;
     
     console.log('Processing answers for questions:', examination.questions.map(q => q._id));
-    console.log('Answers received:', answers);
     
-    // Handle case where answers might be undefined or null
-    const answersToProcess = answers || {};
+    // Extract answers from req.body directly - they are in format 'answers[questionId]': 'optionId'
+    const extractedAnswers = {};
+    
+    // Loop through all keys in req.body
+    Object.keys(req.body).forEach(key => {
+      // Check if the key matches the pattern 'answers[someId]'
+      const match = key.match(/answers\[(.*?)\]/);
+      if (match && match[1]) {
+        const questionId = match[1];
+        extractedAnswers[questionId] = req.body[key];
+        console.log(`Found answer for question ${questionId}: ${req.body[key]}`);
+      }
+    });
+    
+    console.log('Extracted answers:', extractedAnswers);
     
     // Process each question
     examination.questions.forEach(question => {
-      // Find the answer for this question - handle various formats
-      let answer = null;
+      // Find the answer for this question
+      const questionId = question._id.toString();
+      const answer = extractedAnswers[questionId];
       
-      if (answersToProcess[question._id]) {
-        // Direct key match
-        answer = answersToProcess[question._id];
-      } else if (answersToProcess[`answers[${question._id}]`]) {
-        // Format with "answers[id]"
-        answer = answersToProcess[`answers[${question._id}]`];
-      } else if (answersToProcess[`[${question._id}]`]) {
-        // Format with "[id]"
-        answer = answersToProcess[`[${question._id}]`];
-      }
-      
-      console.log(`Question ${question._id}: Answer = ${answer}`);
+      console.log(`Question ${questionId}: Answer = ${answer}`);
       
       // Process the answer
       const selectedOption = answer ? question.options.id(answer) : null;
+      
+      if (!selectedOption) {
+        console.log(`Warning: Could not find option ${answer} for question ${questionId}`);
+        console.log('Available options:', question.options.map(o => ({ id: o._id.toString(), text: o.text.substring(0, 20) })));
+      }
+      
       const isCorrect = selectedOption && selectedOption.isCorrect;
       
       const marksObtained = isCorrect ? question.marks : 0;
