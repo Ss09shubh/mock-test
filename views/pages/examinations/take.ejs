@@ -43,12 +43,16 @@
                 name="answers[<%= question._id %>]" 
                 id="q<%= qIndex %>-o<%= oIndex %>" 
                 value="<%= option._id %>"
+                required
               >
               <label class="form-check-label option-label" for="q<%= qIndex %>-o<%= oIndex %>">
                 <%= option.text %>
               </label>
             </div>
           <% }); %>
+        </div>
+        <div class="text-danger question-error" id="error-<%= question._id %>" style="display: none;">
+          Please select an answer for this question
         </div>
       </div>
     </div>
@@ -60,6 +64,43 @@
     </button>
   </div>
 </form>
+
+<script>
+  document.getElementById('exam-form').addEventListener('submit', function(e) {
+    let hasError = false;
+    const questions = document.querySelectorAll('.card');
+    
+    questions.forEach(questionCard => {
+      const questionId = questionCard.querySelector('.option-input')?.name.match(/\[(.*?)\]/)?.[1];
+      if (!questionId) return;
+      
+      const options = questionCard.querySelectorAll('.option-input');
+      const errorElement = document.getElementById(`error-${questionId}`);
+      
+      // Check if any option is selected
+      let isAnswered = false;
+      options.forEach(option => {
+        if (option.checked) {
+          isAnswered = true;
+        }
+      });
+      
+      if (!isAnswered) {
+        e.preventDefault();
+        hasError = true;
+        if (errorElement) {
+          errorElement.style.display = 'block';
+        }
+      } else if (errorElement) {
+        errorElement.style.display = 'none';
+      }
+    });
+    
+    if (hasError) {
+      alert('Please answer all questions before submitting the examination.');
+    }
+  });
+</script>
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {

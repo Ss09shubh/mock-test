@@ -264,9 +264,25 @@ router.get('/:id/start', ensureAuthenticated, ensureMember, async (req, res) => 
 });
 
 // Submit examination
-router.post('/:id/submit', ensureAuthenticated, ensureMember, submitExaminationValidation, async (req, res) => {
+router.post('/:id/submit', ensureAuthenticated, ensureMember, async (req, res) => {
   try {
     const { examResultId, answers } = req.body;
+    
+    console.log('Submitting examination:', req.params.id);
+    console.log('Exam Result ID:', examResultId);
+    console.log('Answers received:', answers);
+    
+    // Validate required fields
+    if (!examResultId) {
+      req.flash('error_msg', 'Exam result ID is required');
+      return res.redirect(`/examinations/${req.params.id}/start`);
+    }
+    
+    // Check if answers are provided
+    if (!answers) {
+      req.flash('error_msg', 'Please answer all questions before submitting');
+      return res.redirect(`/examinations/${req.params.id}/start`);
+    }
     
     // Find the exam result
     const examResult = await ExamResult.findById(examResultId);
@@ -299,9 +315,17 @@ router.post('/:id/submit', ensureAuthenticated, ensureMember, submitExaminationV
     // Process answers and calculate score
     const processedAnswers = [];
     let totalMarksObtained = 0;
+    let unansweredQuestions = 0;
     
     examination.questions.forEach(question => {
       const answer = answers[question._id];
+      
+      // Check if question is answered
+      if (!answer) {
+        unansweredQuestions++;
+        return;
+      }
+      
       const selectedOption = question.options.id(answer);
       const isCorrect = selectedOption && selectedOption.isCorrect;
       
@@ -316,6 +340,12 @@ router.post('/:id/submit', ensureAuthenticated, ensureMember, submitExaminationV
       });
     });
     
+    // Check if all questions are answered
+    if (unansweredQuestions > 0) {
+      req.flash('error_msg', `Please answer all questions before submitting. ${unansweredQuestions} question(s) unanswered.`);
+      return res.redirect(`/examinations/${req.params.id}/start`);
+    }
+    
     // Update exam result
     examResult.answers = processedAnswers;
     examResult.totalMarksObtained = totalMarksObtained;
@@ -328,7 +358,7 @@ router.post('/:id/submit', ensureAuthenticated, ensureMember, submitExaminationV
     req.flash('success_msg', 'Examination submitted successfully');
     res.redirect(`/results/${examResult._id}`);
   } catch (err) {
-    console.error(err);
+    console.error('Error submitting examination:', err);
     req.flash('error_msg', 'Error submitting examination');
     res.redirect(`/examinations/${req.params.id}/start`);
   }
