@@ -66,87 +66,49 @@
 
 <script>
   document.getElementById('exam-form').addEventListener('submit', function(e) {
-    console.log('Form submission triggered');
+    console.log('Form submission triggered - submitting immediately without validation');
+    // No validation - form will submit immediately with whatever answers are selected
     
-    // Get all questions and their answers
-    const questions = <%= JSON.stringify(examination.questions.map(q => q._id)) %>;
-    const answers = {};
+    // Optional: Show a loading message
+    document.querySelector('button[type="submit"]').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+    document.querySelector('button[type="submit"]').disabled = true;
     
-    // Check each question
-    let unansweredQuestions = [];
-    
-    questions.forEach(questionId => {
-      const radioButtons = document.querySelectorAll(`input[name="answers[${questionId}]"]`);
-      const errorElement = document.getElementById(`error-${questionId}`);
-      
-      // Check if any option is selected for this question
-      let isAnswered = false;
-      radioButtons.forEach(radio => {
-        if (radio.checked) {
-          isAnswered = true;
-          answers[questionId] = radio.value;
-        }
-      });
-      
-      if (!isAnswered) {
-        unansweredQuestions.push(questionId);
-        if (errorElement) {
-          errorElement.style.display = 'block';
-        }
-      } else if (errorElement) {
-        errorElement.style.display = 'none';
-      }
-    });
-    
-    // If any questions are unanswered, prevent form submission
-    if (unansweredQuestions.length > 0) {
-      e.preventDefault();
-      console.log('Unanswered questions:', unansweredQuestions);
-      alert(`Please answer all questions before submitting the examination. (${unansweredQuestions.length} questions unanswered)`);
-    } else {
-      console.log('All questions answered, submitting form');
-      // Form will submit normally
-    }
+    // Form will submit normally
+    return true;
   });
 </script>
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
+    // Override the examination duration to 10 minutes
+    const examDuration = 10; // 10 minutes
+    
     // Start the timer
-    if (typeof startExamTimer === 'function') {
-      startExamTimer(<%= examination.durationMinutes %>);
-    } else {
-      console.error('startExamTimer function is not defined');
+    function startExamTimer(durationMinutes) {
+      const timerElement = document.getElementById('exam-timer');
+      if (!timerElement) return;
       
-      // Define the function locally if it's not available
-      function startExamTimer(durationMinutes) {
-        if (!durationMinutes) return;
-        
-        const timerElement = document.getElementById('exam-timer');
-        if (!timerElement) return;
-        
-        const endTime = new Date().getTime() + (durationMinutes * 60 * 1000);
-        
-        const timerInterval = setInterval(function() {
-          const now = new Date().getTime();
-          const distance = endTime - now;
-          
-          const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-          const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-          const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-          
-          timerElement.innerHTML = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-          
-          if (distance < 0) {
-            clearInterval(timerInterval);
-            timerElement.innerHTML = "TIME'S UP!";
-            document.getElementById('exam-form').submit();
-          }
-        }, 1000);
-      }
+      const endTime = new Date().getTime() + (durationMinutes * 60 * 1000);
       
-      // Call the locally defined function
-      startExamTimer(<%= examination.durationMinutes %>);
+      const timerInterval = setInterval(function() {
+        const now = new Date().getTime();
+        const distance = endTime - now;
+        
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        
+        timerElement.innerHTML = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        
+        if (distance < 0) {
+          clearInterval(timerInterval);
+          timerElement.innerHTML = "TIME'S UP!";
+          document.getElementById('exam-form').submit();
+        }
+      }, 1000);
     }
+    
+    // Call the timer function with 10 minutes
+    startExamTimer(examDuration);
   });
 </script>
