@@ -28,7 +28,7 @@
   <input type="hidden" name="examResultId" value="<%= examResult._id %>">
   
   <% examination.questions.forEach((question, qIndex) => { %>
-    <div class="card mb-4">
+    <div class="card mb-4 question-card" data-question-id="<%= question._id %>">
       <div class="card-header bg-light">
         <h5 class="mb-0">Question <%= qIndex + 1 %> (Marks: <%= question.marks %>)</h5>
       </div>
@@ -43,7 +43,6 @@
                 name="answers[<%= question._id %>]" 
                 id="q<%= qIndex %>-o<%= oIndex %>" 
                 value="<%= option._id %>"
-                required
               >
               <label class="form-check-label option-label" for="q<%= qIndex %>-o<%= oIndex %>">
                 <%= option.text %>
@@ -67,27 +66,30 @@
 
 <script>
   document.getElementById('exam-form').addEventListener('submit', function(e) {
-    let hasError = false;
-    const questions = document.querySelectorAll('.card');
+    console.log('Form submission triggered');
     
-    questions.forEach(questionCard => {
-      const questionId = questionCard.querySelector('.option-input')?.name.match(/\[(.*?)\]/)?.[1];
-      if (!questionId) return;
-      
-      const options = questionCard.querySelectorAll('.option-input');
+    // Get all questions and their answers
+    const questions = <%= JSON.stringify(examination.questions.map(q => q._id)) %>;
+    const answers = {};
+    
+    // Check each question
+    let unansweredQuestions = [];
+    
+    questions.forEach(questionId => {
+      const radioButtons = document.querySelectorAll(`input[name="answers[${questionId}]"]`);
       const errorElement = document.getElementById(`error-${questionId}`);
       
-      // Check if any option is selected
+      // Check if any option is selected for this question
       let isAnswered = false;
-      options.forEach(option => {
-        if (option.checked) {
+      radioButtons.forEach(radio => {
+        if (radio.checked) {
           isAnswered = true;
+          answers[questionId] = radio.value;
         }
       });
       
       if (!isAnswered) {
-        e.preventDefault();
-        hasError = true;
+        unansweredQuestions.push(questionId);
         if (errorElement) {
           errorElement.style.display = 'block';
         }
@@ -96,8 +98,14 @@
       }
     });
     
-    if (hasError) {
-      alert('Please answer all questions before submitting the examination.');
+    // If any questions are unanswered, prevent form submission
+    if (unansweredQuestions.length > 0) {
+      e.preventDefault();
+      console.log('Unanswered questions:', unansweredQuestions);
+      alert(`Please answer all questions before submitting the examination. (${unansweredQuestions.length} questions unanswered)`);
+    } else {
+      console.log('All questions answered, submitting form');
+      // Form will submit normally
     }
   });
 </script>
@@ -105,6 +113,40 @@
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     // Start the timer
-    startExamTimer(<%= examination.durationMinutes %>);
+    if (typeof startExamTimer === 'function') {
+      startExamTimer(<%= examination.durationMinutes %>);
+    } else {
+      console.error('startExamTimer function is not defined');
+      
+      // Define the function locally if it's not available
+      function startExamTimer(durationMinutes) {
+        if (!durationMinutes) return;
+        
+        const timerElement = document.getElementById('exam-timer');
+        if (!timerElement) return;
+        
+        const endTime = new Date().getTime() + (durationMinutes * 60 * 1000);
+        
+        const timerInterval = setInterval(function() {
+          const now = new Date().getTime();
+          const distance = endTime - now;
+          
+          const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+          
+          timerElement.innerHTML = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+          
+          if (distance < 0) {
+            clearInterval(timerInterval);
+            timerElement.innerHTML = "TIME'S UP!";
+            document.getElementById('exam-form').submit();
+          }
+        }, 1000);
+      }
+      
+      // Call the locally defined function
+      startExamTimer(<%= examination.durationMinutes %>);
+    }
   });
 </script>

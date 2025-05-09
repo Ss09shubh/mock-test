@@ -315,18 +315,44 @@ router.post('/:id/submit', ensureAuthenticated, ensureMember, async (req, res) =
     // Process answers and calculate score
     const processedAnswers = [];
     let totalMarksObtained = 0;
-    let unansweredQuestions = 0;
     
+    console.log('Processing answers for questions:', examination.questions.map(q => q._id));
+    console.log('Answers received:', answers);
+    
+    // Convert answers object to a more manageable format if needed
+    let processedAnswersObj = answers;
+    if (typeof answers === 'object' && !Array.isArray(answers)) {
+      // The answers might be in format { 'questionId': 'optionId' }
+      processedAnswersObj = Object.entries(answers).map(([key, value]) => {
+        // Remove brackets if they exist in the key (from answers[questionId] format)
+        const questionId = key.replace(/[\[\]]/g, '');
+        return {
+          questionId,
+          optionId: value
+        };
+      });
+    }
+    
+    console.log('Processed answers:', processedAnswersObj);
+    
+    // Process each question
     examination.questions.forEach(question => {
-      const answer = answers[question._id];
+      // Find the answer for this question
+      let answer;
       
-      // Check if question is answered
-      if (!answer) {
-        unansweredQuestions++;
-        return;
+      if (Array.isArray(processedAnswersObj)) {
+        // If answers are in array format
+        const answerObj = processedAnswersObj.find(a => a.questionId === question._id.toString());
+        answer = answerObj ? answerObj.optionId : null;
+      } else {
+        // If answers are in object format with keys like "answers[questionId]"
+        answer = answers[question._id] || answers[`[${question._id}]`];
       }
       
-      const selectedOption = question.options.id(answer);
+      console.log(`Question ${question._id}: Answer = ${answer}`);
+      
+      // Even if no answer, we'll record it with null selectedOption
+      const selectedOption = answer ? question.options.id(answer) : null;
       const isCorrect = selectedOption && selectedOption.isCorrect;
       
       const marksObtained = isCorrect ? question.marks : 0;
@@ -334,17 +360,11 @@ router.post('/:id/submit', ensureAuthenticated, ensureMember, async (req, res) =
       
       processedAnswers.push({
         question: question._id,
-        selectedOption: answer,
-        isCorrect,
+        selectedOption: answer || null,
+        isCorrect: isCorrect || false,
         marksObtained
       });
     });
-    
-    // Check if all questions are answered
-    if (unansweredQuestions > 0) {
-      req.flash('error_msg', `Please answer all questions before submitting. ${unansweredQuestions} question(s) unanswered.`);
-      return res.redirect(`/examinations/${req.params.id}/start`);
-    }
     
     // Update exam result
     examResult.answers = processedAnswers;
